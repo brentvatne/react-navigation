@@ -1,9 +1,6 @@
 /* @flow */
 
-import {
-  Animated,
-  I18nManager,
-} from 'react-native';
+import { Animated, Keyboard, I18nManager } from 'react-native';
 
 import clamp from 'clamp';
 
@@ -19,7 +16,7 @@ const emptyFunction = () => {};
 /**
  * The duration of the card animation in milliseconds.
  */
-const ANIMATION_DURATION = 250;
+const ANIMATION_DURATION = 200;
 
 /**
  * The threshold to invoke the `onNavigateBack` action.
@@ -45,7 +42,6 @@ const GESTURE_RESPONSE_DISTANCE = 35;
  * TODO: Understand and compute this ratio rather than using an approximation
  */
 const GESTURE_ANIMATED_VELOCITY_RATIO = -4;
-
 
 /**
  * Primitive gesture directions.
@@ -80,16 +76,12 @@ type Props = NavigationSceneRendererProps & {
  *     +------------+
  */
 class CardStackPanResponder extends AbstractPanResponder {
-
   _isResponding: boolean;
   _isVertical: boolean;
   _props: Props;
   _startValue: number;
 
-  constructor(
-    direction: GestureDirection,
-    props: Props,
-  ) {
+  constructor(direction: GestureDirection, props: Props) {
     super();
     this._isResponding = false;
     this._isVertical = direction === Directions.VERTICAL;
@@ -108,7 +100,10 @@ class CardStackPanResponder extends AbstractPanResponder {
     this._addNativeListener(this._props.position);
   }
 
-  onMoveShouldSetPanResponder(event: {nativeEvent: {pageY: number, pageX: number}}, gesture: any): boolean {
+  onMoveShouldSetPanResponder(
+    event: { nativeEvent: { pageY: number, pageX: number } },
+    gesture: any
+  ): boolean {
     const props = this._props;
 
     if (props.navigationState.index !== props.scene.index) {
@@ -119,28 +114,31 @@ class CardStackPanResponder extends AbstractPanResponder {
     const isVertical = this._isVertical;
     const index = props.navigationState.index;
     const currentDragDistance = gesture[isVertical ? 'dy' : 'dx'];
-    const currentDragPosition = event.nativeEvent[isVertical ? 'pageY' : 'pageX'];
-    const maxDragDistance = isVertical ?
-      layout.height.__getValue() :
-      layout.width.__getValue();
+    const currentDragPosition = event.nativeEvent[
+      isVertical ? 'pageY' : 'pageX'
+    ];
+    const maxDragDistance = isVertical
+      ? layout.height.__getValue()
+      : layout.width.__getValue();
 
-    const positionMax = isVertical ?
-      props.gestureResponseDistance :
-      /**
+    const positionMax = isVertical
+      ? props.gestureResponseDistance
+      : /**
       * For horizontal scroll views, a distance of 30 from the left of the screen is the
       * standard maximum position to start touch responsiveness.
       */
-      props.gestureResponseDistance || GESTURE_RESPONSE_DISTANCE;
+        props.gestureResponseDistance || GESTURE_RESPONSE_DISTANCE;
 
-    if (positionMax != null && (currentDragPosition - currentDragDistance) > positionMax) {
+    if (
+      positionMax != null &&
+      currentDragPosition - currentDragDistance > positionMax
+    ) {
       return false;
     }
 
-    return (
-      Math.abs(currentDragDistance) > RESPOND_THRESHOLD &&
+    return Math.abs(currentDragDistance) > RESPOND_THRESHOLD &&
       maxDragDistance > 0 &&
-      index > 0
-    );
+      index > 0;
   }
 
   onPanResponderGrant(): void {
@@ -161,18 +159,14 @@ class CardStackPanResponder extends AbstractPanResponder {
     const isVertical = this._isVertical;
     const axis = isVertical ? 'dy' : 'dx';
     const index = props.navigationState.index;
-    const distance = isVertical ?
-      layout.height.__getValue() :
-      layout.width.__getValue();
-    const currentValue = I18nManager.isRTL && axis === 'dx' ?
-      this._startValue + (gesture[axis] / distance) :
-      this._startValue - (gesture[axis] / distance);
+    const distance = isVertical
+      ? layout.height.__getValue()
+      : layout.width.__getValue();
+    const currentValue = I18nManager.isRTL && axis === 'dx'
+      ? this._startValue + gesture[axis] / distance
+      : this._startValue - gesture[axis] / distance;
 
-    const value = clamp(
-      index - 1,
-      currentValue,
-      index
-    );
+    const value = clamp(index - 1, currentValue, index);
 
     props.position.setValue(value);
   }
@@ -210,9 +204,7 @@ class CardStackPanResponder extends AbstractPanResponder {
 
       // Then filter based on the distance the screen was moved. Over a third of the way swiped,
       // and the back will happen.
-      if (
-        value <= index - POSITION_THRESHOLD
-      ) {
+      if (value <= index - POSITION_THRESHOLD) {
         this._goBack(velocity);
       } else {
         this._reset(velocity);
@@ -233,16 +225,14 @@ class CardStackPanResponder extends AbstractPanResponder {
 
   _reset(velocity: number): void {
     const props = this._props;
-    Animated.spring(
-      props.position,
-      {
+    Animated.spring(props.position, {
         toValue: props.navigationState.index,
         duration: ANIMATION_DURATION,
         useNativeDriver: props.position.__isNative,
         velocity: velocity * GESTURE_ANIMATED_VELOCITY_RATIO,
         bounciness: 0,
-      }
-    ).start();
+      })
+      .start();
   }
 
   _goBack(velocity: number) {
@@ -250,16 +240,22 @@ class CardStackPanResponder extends AbstractPanResponder {
     if (!props.onNavigateBack) {
       return;
     }
-    Animated.spring(
-      props.position,
-      {
-        toValue: Math.max(props.navigationState.index - 1, 0),
+
+    // note(brentvatne): hack, but there needs to be a way to hook into this
+    // before the animation completes
+    let toValue = Math.max(props.navigationState.index - 1, 0);
+    if (toValue === 0) {
+      Keyboard.dismiss();
+    }
+
+    Animated.spring(props.position, {
+        toValue,
         duration: ANIMATION_DURATION,
         useNativeDriver: props.position.__isNative,
         velocity: velocity * GESTURE_ANIMATED_VELOCITY_RATIO,
         bounciness: 0,
-      }
-    ).start(props.onNavigateBack);
+      })
+      .start(props.onNavigateBack);
   }
 
   _addNativeListener(animatedValue: Animated.Value) {
@@ -275,21 +271,17 @@ class CardStackPanResponder extends AbstractPanResponder {
 
 function createPanHandlers(
   direction: GestureDirection,
-  props: Props,
+  props: Props
 ): NavigationPanHandlers {
   const responder = new CardStackPanResponder(direction, props);
   return responder.panHandlers;
 }
 
-function forHorizontal(
-  props: Props,
-): NavigationPanHandlers {
+function forHorizontal(props: Props): NavigationPanHandlers {
   return createPanHandlers(Directions.HORIZONTAL, props);
 }
 
-function forVertical(
-  props: Props,
-): NavigationPanHandlers {
+function forVertical(props: Props): NavigationPanHandlers {
   return createPanHandlers(Directions.VERTICAL, props);
 }
 
