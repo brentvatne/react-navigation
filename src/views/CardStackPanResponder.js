@@ -225,7 +225,7 @@ class CardStackPanResponder extends AbstractPanResponder {
 
   _reset(velocity: number): void {
     const props = this._props;
-    Animated.spring(props.position, {
+    Animated.timing(props.position, {
         toValue: props.navigationState.index,
         duration: ANIMATION_DURATION,
         useNativeDriver: props.position.__isNative,
@@ -248,7 +248,7 @@ class CardStackPanResponder extends AbstractPanResponder {
       Keyboard.dismiss();
     }
 
-    Animated.spring(props.position, {
+    Animated.timing(props.position, {
         toValue,
         duration: ANIMATION_DURATION,
         useNativeDriver: props.position.__isNative,
