@@ -2,10 +2,7 @@
 
 import React, { PropTypes } from 'react';
 
-import {
-  Animated,
-  StyleSheet,
-} from 'react-native';
+import { Animated, StyleSheet } from 'react-native';
 
 import CardStackPanResponder from './CardStackPanResponder';
 import CardStackStyleInterpolator from './CardStackStyleInterpolator';
@@ -52,24 +49,23 @@ class Card extends React.Component<any, Props, any> {
       ...props /* NavigationSceneRendererProps */
     } = this.props;
 
-    const viewStyle = style === undefined ?
-      CardStackStyleInterpolator.forHorizontal(props) :
-      style;
+    const viewStyle = style === undefined
+      ? CardStackStyleInterpolator.forHorizontal(props)
+      : style;
 
-    const viewPanHandlers = panHandlers === undefined ?
-      CardStackPanResponder.forHorizontal({
-        ...props,
-        onNavigateBack: this.props.onNavigateBack,
-      }) :
-      panHandlers;
+    const viewPanHandlers = panHandlers === undefined
+      ? CardStackPanResponder.forHorizontal({
+          ...props,
+          onNavigateBack: this.props.onNavigateBack,
+        })
+      : panHandlers;
 
     return (
       <Animated.View
         {...viewPanHandlers}
         pointerEvents={pointerEvents}
         ref={this.props.onComponentRef}
-        style={[styles.main, viewStyle]}
-      >
+        style={[styles.main, viewStyle]}>
         {renderScene(props)}
       </Animated.View>
     );
@@ -85,8 +81,8 @@ const styles = StyleSheet.create({
     right: 0,
     shadowColor: 'black',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
     top: 0,
   },
 });

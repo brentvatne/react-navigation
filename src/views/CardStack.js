@@ -1,12 +1,7 @@
 /* @flow */
 
 import React, { PropTypes, Component } from 'react';
-import {
-  StyleSheet,
-  NativeModules,
-  Platform,
-  View,
-} from 'react-native';
+import { StyleSheet, NativeModules, Platform, View } from 'react-native';
 
 import Transitioner from './Transitioner';
 import Card from './Card';
@@ -29,18 +24,17 @@ import type {
   Style,
 } from '../TypeDefinition';
 
-import type {
-  HeaderMode,
-} from './Header';
+import type { HeaderMode } from './Header';
 
 import type { TransitionConfig } from './TransitionConfigs';
 
 import TransitionConfigs from './TransitionConfigs';
 
-const NativeAnimatedModule = NativeModules && NativeModules.NativeAnimatedModule;
+const NativeAnimatedModule = NativeModules &&
+  NativeModules.NativeAnimatedModule;
 
 type Props = {
-  screenProps?: {};
+  screenProps?: {},
   headerMode: HeaderMode,
   headerComponent?: ReactClass<*>,
   mode: 'card' | 'modal',
@@ -66,7 +60,7 @@ class CardStack extends Component<DefaultProps, Props, void> {
   _render: NavigationSceneRenderer;
   _renderScene: NavigationSceneRenderer;
   _childNavigationProps: {
-    [key: string]: NavigationScreenProp<*, NavigationAction>
+    [key: string]: NavigationScreenProp<*, NavigationAction>,
   } = {};
 
   static Card = Card;
@@ -175,15 +169,15 @@ class CardStack extends Component<DefaultProps, Props, void> {
       ).transitionSpec,
     };
     if (
-       !!NativeAnimatedModule
-       // Native animation support also depends on the transforms used:
-       && CardStackStyleInterpolator.canUseNativeDriver(isModal)
+      !!NativeAnimatedModule &&
+      // Native animation support also depends on the transforms used:
+      CardStackStyleInterpolator.canUseNativeDriver(isModal)
     ) {
       // Internal undocumented prop
       transitionSpec.useNativeDriver = true;
     }
     return transitionSpec;
-  }
+  };
 
   _renderHeader(
     transitionProps: NavigationTransitionProps,
@@ -202,15 +196,24 @@ class CardStack extends Component<DefaultProps, Props, void> {
         mode={headerMode}
         onNavigateBack={() => this.props.navigation.goBack(null)}
         renderLeftComponent={(props: NavigationTransitionProps) => {
-          const header = this.props.router.getScreenConfig(props.navigation, 'header') || {};
+          const header = this.props.router.getScreenConfig(
+            props.navigation,
+            'header'
+          ) || {};
           return header.left;
         }}
         renderRightComponent={(props: NavigationTransitionProps) => {
-          const header = this.props.router.getScreenConfig(props.navigation, 'header') || {};
+          const header = this.props.router.getScreenConfig(
+            props.navigation,
+            'header'
+          ) || {};
           return header.right;
         }}
         renderTitleComponent={(props: NavigationTransitionProps) => {
-          const header = this.props.router.getScreenConfig(props.navigation, 'header') || {};
+          const header = this.props.router.getScreenConfig(
+            props.navigation,
+            'header'
+          ) || {};
           // When we return 'undefined' from 'renderXComponent', header treats them as not
           // specified and default 'renderXComponent' functions are used. In case of 'title',
           // we return 'undefined' in case of 'string' too because the default 'renderTitle'
@@ -232,16 +235,12 @@ class CardStack extends Component<DefaultProps, Props, void> {
     }
     return (
       <View style={styles.container}>
-        <View
-          style={styles.scenes}
-        >
-          {props.scenes.map(
-            (scene: *) => this._renderScene({
-              ...props,
-              scene,
-              navigation: this._getChildNavigation(scene),
-            })
-          )}
+        <View style={styles.scenes}>
+          {props.scenes.map((scene: *) => this._renderScene({
+            ...props,
+            scene,
+            navigation: this._getChildNavigation(scene),
+          }))}
         </View>
         {floatingHeader}
       </View>
@@ -281,17 +280,21 @@ class CardStack extends Component<DefaultProps, Props, void> {
 
   _renderInnerCard(
     SceneComponent: ReactClass<*>,
-    props: NavigationSceneRendererProps,
+    props: NavigationSceneRendererProps
   ): React.Element<*> {
-    const header = this.props.router.getScreenConfig(props.navigation, 'header');
+    const header = this.props.router.getScreenConfig(
+      props.navigation,
+      'header'
+    );
     const headerMode = this._getHeaderMode();
     if (headerMode === 'screen') {
       const isHeaderHidden = header && header.visible === false;
-      const maybeHeader =
-        isHeaderHidden ? null : this._renderHeader(props, headerMode);
+      const maybeHeader = isHeaderHidden
+        ? null
+        : this._renderHeader(props, headerMode);
       return (
         <View style={styles.container}>
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             <SceneView
               screenProps={this.props.screenProps}
               navigation={props.navigation}
@@ -316,13 +319,15 @@ class CardStack extends Component<DefaultProps, Props, void> {
   ): NavigationScreenProp<*, NavigationAction> => {
     let navigation = this._childNavigationProps[scene.key];
     if (!navigation || navigation.state !== scene.route) {
-      navigation = this._childNavigationProps[scene.key] = addNavigationHelpers({
+      navigation = this._childNavigationProps[
+        scene.key
+      ] = addNavigationHelpers({
         ...this.props.navigation,
         state: scene.route,
       });
     }
     return navigation;
-  }
+  };
 
   _renderScene(props: NavigationSceneRendererProps): React.Element<*> {
     const isModal = this.props.mode === 'modal';
@@ -341,34 +346,38 @@ class CardStack extends Component<DefaultProps, Props, void> {
     // On iOS, the default behavior is to allow the user to pop a route by
     // swiping the corresponding Card away. On Android this is off by default
     const gesturesEnabledConfig = cardStackConfig.gesturesEnabled;
-    const gesturesEnabled = typeof gesturesEnabledConfig === 'boolean' ?
-      gesturesEnabledConfig :
-      Platform.OS === 'ios';
+    const gesturesEnabled = typeof gesturesEnabledConfig === 'boolean'
+      ? gesturesEnabledConfig
+      : Platform.OS === 'ios';
     if (gesturesEnabled) {
       let onNavigateBack = null;
       if (this.props.navigation.state.index !== 0) {
-        onNavigateBack = () => this.props.navigation.dispatch(
-          NavigationActions.back({ key: props.scene.route.key })
-        );
+        onNavigateBack = () =>
+          this.props.navigation.dispatch(
+            NavigationActions.back({ key: props.scene.route.key })
+          );
       }
       const panHandlersProps = {
         ...props,
         onNavigateBack,
         gestureResponseDistance: this.props.gestureResponseDistance,
       };
-      panHandlers = isModal ?
-        CardStackPanResponder.forVertical(panHandlersProps) :
-        CardStackPanResponder.forHorizontal(panHandlersProps);
+      panHandlers = isModal
+        ? {}
+        : CardStackPanResponder.forHorizontal(panHandlersProps);
     }
 
-    const SceneComponent = this.props.router.getComponentForRouteName(props.scene.route.routeName);
+    const SceneComponent = this.props.router.getComponentForRouteName(
+      props.scene.route.routeName
+    );
 
     return (
       <Card
         {...props}
         key={`card_${props.scene.key}`}
         panHandlers={panHandlers}
-        renderScene={(sceneProps: *) => this._renderInnerCard(SceneComponent, sceneProps)}
+        renderScene={(sceneProps: *) =>
+          this._renderInnerCard(SceneComponent, sceneProps)}
         style={[style, this.props.cardStyle]}
       />
     );
